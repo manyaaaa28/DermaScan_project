@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Offline Appointment - DermaScan</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    (function() {
+      emailjs.init("uayBkW0rT5X46U1I0");
+    })();
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body { margin: 0; padding: 0; background: linear-gradient(to bottom, #1a002f, #10001f); font-family: 'Poppins', sans-serif; color: white; }
+    header { background-color: #1a002f; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(188, 89, 255, 0.2); }
+    .logo-container { display: flex; align-items: center; position: relative; }
+    .logo-img { width: 60px; height: auto; cursor: pointer; filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)); }
+    .logo-hover-text { margin-left: 10px; color: #ffffff; font-weight: 600; font-size: 2.0rem; overflow: hidden; white-space: nowrap; border-right: 2px solid #ffffff; width: 0; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.5s; }
+    .logo-container:hover .logo-hover-text { opacity: 1; visibility: visible; animation: typing 1.5s steps(9) forwards, blink-caret 0.8s step-end infinite; transition-delay: 0s; }
+    nav a { color: white; margin-left: 20px; text-decoration: none; font-weight: 500; }
+    nav a:hover { color: #e0b0ff; }
+    @keyframes typing { from { width: 0 } to { width: 9.5ch } }
+    @keyframes blink-caret { 0%, 100% { border-color: transparent; } 50% { border-color: #ffffff; } }
+    main { min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+    .form-container { background: #2b004d; padding: 40px 30px; border-radius: 20px; box-shadow: 0 0 25px rgba(188, 89, 255, 0.3); max-width: 500px; width: 100%; animation: fadeIn 0.6s ease-in-out; margin-bottom: 30px; }
+    h1 { text-align: center; margin-bottom: 10px; color: #e0b0ff; }
+    p.description { text-align: center; font-size: 0.95rem; margin-bottom: 30px; color: #ccc; }
+    form input, form select, form textarea { width: 100%; padding: 12px 15px; margin-bottom: 20px; border: none; border-radius: 10px; font-size: 1rem; background: #3d006b; color: white; outline: none; transition: all 0.3s ease; resize: none; }
+    form input:focus, form select:focus, form textarea:focus { box-shadow: 0 0 10px #bc59ff; background: #450074; }
+    form button { width: 100%; padding: 14px; font-size: 1rem; border: none; border-radius: 10px; background: linear-gradient(135deg, #8e2de2, #bc59ff); color: white; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 8px 20px rgba(188,89,255,0.3); }
+    form button:hover { transform: scale(1.05); box-shadow: 0 12px 30px rgba(188,89,255,0.5); }
+    .nearby-doctors { background: #1a1a2e; padding: 20px 30px; border-radius: 15px; box-shadow: 0 0 15px rgba(188, 89, 255, 0.2); max-width: 500px; width: 100%; }
+    .nearby-doctors h3 { color: #bb86fc; margin-bottom: 15px; }
+    .nearby-doctors ul { list-style: none; padding: 0; font-size: 0.95rem; }
+    .nearby-doctors li { margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    footer { text-align: center; padding: 20px; font-size: 0.85rem; background: #1a002f; color: #999; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-container">
+    <img src="{{ url_for('static', filename='main_logo_1_-removebg-preview.png') }}" alt="logo" class="logo-img" />
+    <span class="logo-hover-text">DermaScan</span>
+  </div>
+  <nav>
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('appointment') }}">Appointment</a>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+  </nav>
+</header>
+
+<main>
+  <div class="form-container">
+    <h1>Offline Appointment</h1>
+    <p class="description">Book an in-clinic appointment with nearby dermatologists.</p>
+
+    <form id="offline-form">
+      <input type="text" name="user_name" placeholder="Full Name" required />
+      <input type="email" name="user_email" placeholder="Email Address" required />
+      <input type="text" id="location" name="location" placeholder="Enter Your Location (e.g. Sector 15)" required />
+      <input type="date" name="date" required />
+      <select name="time_slot" required>
+        <option value="">Choose Time Slot</option>
+        <option>10:00 AM – 11:00 AM</option>
+        <option>1:00 PM – 2:00 PM</option>
+        <option>4:00 PM – 5:00 PM</option>
+      </select>
+      <textarea name="problem" id="problem" placeholder="Describe Your Problem and Side Symptoms" required></textarea>
+      <textarea name="history" id="history" placeholder="Describe Your Problem History" required></textarea>
+      <button type="submit">Confirm Offline Appointment</button>
+    </form>
+  </div>
+
+  <div class="nearby-doctors">
+    <h3>Nearby Dermatologists (5km radius)</h3>
+    <ul id="doctor-list"></ul>
+  </div>
+</main>
+
+<footer>
+  &copy; 2025 DermaScan | Advanced Skin Diagnosis, Simplified.
+</footer>
+
+<script>
+  document.getElementById("offline-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const userLocation = document.getElementById("location").value.toLowerCase();
+    const problem = document.getElementById("problem").value.trim();
+    const history = document.getElementById("history").value.trim();
+    const list = document.getElementById('doctor-list');
+    list.innerHTML = '';
+
+    // Validate problem and history fields
+    if (problem === "" || history === "") {
+      alert("Please fill in both 'Your Problem' and 'Your Problem History' to see nearby dermatologists.");
+      return;
+    }
+
+    const doctors = [
+      { name: "SkinCare Clinic", address: "Sector 15, Near Metro Station", phone: "9876543210" },
+      { name: "Glow Derma Center", address: "Sector 10 Market", phone: "9123456789" },
+      { name: "Dr. Mehta Skin Specialist", address: "ABC Mall, 2nd Floor", phone: "9988776655" }
+    ];
+
+    const nearby = doctors.filter(doc => doc.address.toLowerCase().includes(userLocation));
+
+    if (nearby.length === 0) {
+      list.innerHTML = '<li>No dermatologists found in your area.</li>';
+    } else {
+      nearby.forEach(doc => {
+        const li = document.createElement('li');
+        li.innerHTML = `<b>${doc.name}</b><br>${doc.address}<br>📞 ${doc.phone}`;
+        list.appendChild(li);
+      });
+    }
+
+    emailjs.sendForm('service_zn35qck', 'template_utcsvzh', this)
+      .then(() => {
+        alert("🎉 Offline appointment booked! Clinic will contact you soon.");
+        this.reset();
+      }, (error) => {
+        alert("❌ Something went wrong.\n" + JSON.stringify(error));
+      });
+  });
+</script>
+
+</body>
+</html>

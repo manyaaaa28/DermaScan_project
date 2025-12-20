@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - DermaScan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #10001f;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #1a002f;
+      padding: 15px 30px;
+      box-shadow: 0 0 10px rgba(188, 89, 255, 0.3);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .logo-img {
+      width: 60px;
+      height: auto;
+      cursor: pointer;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+    }
+
+    .logo-hover-text {
+      margin-left: 10px;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 2.0rem;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 2px solid #ffffff;
+      width: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0s linear 0.5s;
+    }
+
+    .logo-container:hover .logo-hover-text {
+      opacity: 1;
+      visibility: visible;
+      animation: typing 1.5s steps(9) forwards, blink-caret 0.8s step-end infinite;
+      transition-delay: 0s;
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 9.5ch }
+    }
+
+    @keyframes blink-caret {
+      0%, 100% { border-color: transparent; }
+      50% { border-color: #ffffff; }
+    }
+
+    nav a {
+      margin-left: 20px;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: #bc59ff;
+    }
+
+    main {
+      padding: 50px 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #ffffff;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+      box-shadow: 0 0 12px rgba(188, 89, 255, 0.2);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #bc59ff;
+      font-size: 1.3rem;
+    }
+
+    .progress-bar {
+      background: #ffffff20;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 15px;
+      margin-top: 10px;
+    }
+
+    .progress-bar-inner {
+      background: linear-gradient(90deg, #bc59ff, #8e2de2);
+      height: 100%;
+      transition: width 0.8s ease-in-out; /* Smooth animation when clarity changes */
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      background: #1a002f;
+      color: #ccc;
+      margin-top: 50px;
+    }
+    
+    .history-img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-top: 15px;
+      border: 1px solid #bc59ff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='main_logo_1_-removebg-preview.png') }}" alt="logo" class="logo-img" />
+      <span class="logo-hover-text">DermaScan</span>
+    </div>
+    <nav>
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('appointment') }}">Appointment</a>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Your Skin Dashboard</h1>
+
+    {% for entry in history %}
+    <div class="card">
+      <h2>Diagnosis: {{ entry.result }}</h2>
+      <p><strong>Confidence:</strong> {{ entry.confidence }}</p>
+      <p><strong>Date:</strong> {{ entry.date }}</p>
+      <img src="{{ url_for('static', filename='uploads/' + entry.image) }}" class="history-img" alt="Scan Image">
+      
+      <div style="margin-top: 15px;">
+        <h3 style="color: #e0b0ff; font-size: 1.1rem;">AI Recommendations:</h3>
+        <ul>
+            {% if 'Acne' in entry.result %}
+              <li>✔️ Use a gentle, non-comedogenic cleanser twice daily.</li>
+              <li>✔️ Avoid heavy makeup and picking at spots.</li>
+            {% elif 'Rash' in entry.result %}
+              <li>✔️ Keep the affected area clean, dry, and cool.</li>
+              <li>✔️ Apply a mild, unscented soothing cream.</li>
+            {% elif 'Allergy' in entry.result %}
+              <li>✔️ Identify the allergen and avoid contact immediately.</li>
+              <li>✔️ Use a cold compress to soothe the irritation.</li>
+            {% endif %}
+        </ul>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if not history %}
+    <div class="card">
+        <p style="text-align: center;">No diagnosis history found. Start by scanning your skin on the Home page!</p>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2>Overall Progress</h2>
+      {% if history %}
+        {# Use the clarity score from the most recent diagnosis (first in list) #}
+        <p>Your skin clarity tracking is active. Current clarity estimation: <strong>{{ history[0].clarity }}%</strong></p>
+        <div class="progress-bar">
+          <div class="progress-bar-inner" style="width: {{ history[0].clarity }}%;"></div>
+        </div>
+      {% else %}
+        <p>No diagnosis data yet. Scan your skin to see your clarity progress!</p>
+        <div class="progress-bar">
+          <div class="progress-bar-inner" style="width: 0%;"></div>
+        </div>
+      {% endif %}
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 DermaScan | AI-Powered Skin Diagnosis
+  </footer>
+
+</body>
+</html>
