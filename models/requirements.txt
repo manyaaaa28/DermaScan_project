@@ -1,7 +1,1 @@
-flask
-tensorflow-cpu
-numpy
-requests
-gunicorn
-google-generativeai
-Pillow
+
