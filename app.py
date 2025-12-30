@@ -136,5 +136,5 @@ def ask_dermagpt():
 # ------------------- 7. Deployment -------------------
 if __name__ == "__main__":
     # Uses Render's dynamic port or 5022 for local testing
-    port = int(os.environ.get("PORT", 5022))
+    port = int(os.environ.get("PORT", 7860))
     app.run(host='0.0.0.0', port=port)
