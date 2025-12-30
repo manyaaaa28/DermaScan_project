@@ -200,14 +200,13 @@
     }
       
   #cursor {
-    display: inline-block;
-    width: 2px;
-    height: 1.5em;
-    background-color: #fff;
-    margin-left: 2px;
-    position: relative;
-    top: 0.1em;
-    animation: blink 0.7s steps(1) infinite, glow 1.5s infinite alternate;
+  display: inline-block;
+  width: 3px;               /* Thickness of the blinking line */
+  height: 1.2em;           /* Height to match your text */
+  background-color: #ffffff; /* Using your theme's purple color */
+  margin-left: 5px;
+  vertical-align: middle;
+  animation: blink 0.8s steps(1) infinite;
 }
 
 @keyframes blink {
@@ -339,7 +338,3 @@ html, body {
   padding: 0;
   box-sizing: border-box;
 }
-
-
-
-

@@ -7,7 +7,179 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Allura&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+
+  <style>
+    /* Styling for AI-generated lists and bold text */
+    #chatDisplay ul, #chatDisplay ol { padding-left: 20px; margin: 5px 0; }
+    #chatDisplay li { margin-bottom: 5px; }
+    #chatDisplay strong { color: #e0b0ff; }
+    #chatDisplay p { margin-bottom: 10px; }
+
+    /* Layout Stability Fixes */
+    .main-flex-container {
+      display: flex; 
+      width: 100%; 
+      justify-content: space-between; 
+      gap: 40px; 
+      margin-bottom: 40px; 
+      flex-wrap: wrap;
+      align-items: stretch; /* Ensures both panels stay same height */
+    }
+
+    .right-panel {
+      flex: 0.8; 
+      min-width: 300px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px;
+    }
+
+    .image-square {
+      flex: 1; /* Takes up available space */
+      min-height: 350px; 
+      background: rgba(255, 255, 255, 0.05); 
+      border-radius: 15px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border: 1px dashed #bc59ff;
+      overflow: hidden;
+    }
+
+    #suggestion-box {
+      min-height: 150px; 
+      background: #1a1a2e; 
+      border: 1px solid #bc59ff; 
+      border-radius: 15px; 
+      padding: 20px; 
+      box-shadow: 0 0 15px rgba(188, 89, 255, 0.2);
+    }
+
+    /* Floating Chat Assistant Specific Styles */
+    #ai-assistant-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 10000;
+      font-family: 'Poppins', sans-serif;
+      opacity: 0;
+      visibility: hidden;
+      animation: revealAI 0.5s forwards;
+      animation-delay: 4s; 
+    }
+
+    @keyframes revealAI {
+      to { opacity: 1; visibility: visible; }
+    }
+
+    #chat-window {
+      display: none; 
+      width: 380px; 
+      height: 550px; 
+      background: #1a1a2e; 
+      border: 1px solid #bc59ff; 
+      border-radius: 20px; 
+      flex-direction: column; 
+      overflow: hidden; 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+      margin-bottom: 20px;
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #bc59ff, #6a00f4); 
+      padding: 15px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      color: white;
+    }
+
+    .chat-body {
+      flex: 1; 
+      padding: 15px; 
+      overflow-y: auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      background: #0f0f1e;
+      scrollbar-width: thin;
+      scrollbar-color: #bc59ff #0f0f1e;
+    }
+
+    .user-msg {
+      align-self: flex-end; 
+      background: #bc59ff; 
+      color: white; 
+      padding: 10px 15px; 
+      border-radius: 18px 18px 2px 18px; 
+      font-size: 0.9rem; 
+      max-width: 85%;
+    }
+
+    .ai-msg {
+      align-self: flex-start; 
+      background: #2a2a40; 
+      color: #eee; 
+      padding: 12px 15px; 
+      border-radius: 18px 18px 18px 2px; 
+      font-size: 0.9rem; 
+      max-width: 85%;
+      border: 1px solid #333;
+    }
+
+    .chat-chip {
+      background: rgba(188, 89, 255, 0.1);
+      border: 1px solid #bc59ff;
+      color: #bc59ff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .chat-chip:hover {
+      background: #bc59ff;
+      color: white;
+    }
+
+    #chat-toggle-btn {
+      width: 70px; 
+      height: 70px; 
+      background: white; 
+      border-radius: 50%; 
+      border: 3px solid #bc59ff; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      box-shadow: 0 5px 20px rgba(188, 89, 255, 0.4); 
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #chat-toggle-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .animate-slide-up {
+      animation: slideUp 0.4s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .typing-indicator {
+      font-style: italic;
+      color: #888;
+      font-size: 0.8rem;
+    }
+  </style>
 </head>
 <body>
 
@@ -15,11 +187,10 @@
     <div style="display: flex; flex-direction: column; align-items: center;">
       <div style="display: flex; align-items: center;">
         <img src="{{ url_for('static', filename='main_logo_1_-removebg-preview.png') }}" style="width: 80px; height: 80px; margin-right: 15px; object-fit: contain; filter: drop-shadow(0 0 5px #bc59ff);">
-        <h1 style="font-size: 3rem; margin: 0; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
+        <h1 style="font-size: 3rem; margin: 0; font-family: 'Poppins', sans-serif;">
           <span id="typewriter"></span><span id="cursor"></span>
         </h1>
       </div>
-      <br>
       <p style="margin-top: 10px; font-size: 1.7rem; opacity: 0.8; font-family:allura;">Advanced Skin Diagnosis, Simplified.</p>
     </div>
   </div>
@@ -38,11 +209,11 @@
 
   <main class="main-container" style="display: flex; flex-direction: column; align-items: center; padding: 30px;">
     
-    <div style="display: flex; width: 100%; justify-content: space-between; gap: 40px; margin-bottom: 40px; flex-wrap: wrap;">
+    <div class="main-flex-container">
         <section class="left-panel" style="flex: 1.2; min-width: 300px;">
-          <div id="home" class="hero-section">
+          <div class="hero-section">
             <h2>Scan Your Skin with AI</h2>
-            <p>Upload a skin image and get instant analysis for acne, rashes, or allergies — powered by advanced AI</p>
+            <p>Upload a skin image for instant analysis — powered by advanced AI</p>
           </div>
           <div class="form-box">
             <form action="/predict" method="POST" enctype="multipart/form-data">
@@ -53,50 +224,78 @@
               <button type="submit">Analyze Now</button>
             </form>
           </div>
-          <div class="result-box" id="resultBox">
+          <div class="result-box">
             <h3>Diagnosis Result</h3>
             <p id="resultText">{{ result or 'Your result will appear here after analysis.' }}</p>
           </div>
         </section>
 
-        <section class="right-panel" style="flex: 0.8; min-width: 300px;">
+        <section class="right-panel">
           <div class="image-square">
             {% if uploaded_image %}
-              <img id="previewImage" src="{{ url_for('static', filename='uploads/' + uploaded_image) }}" alt="Analyzed skin" style="width:300px; height:300px; object-fit:cover; border-radius:15px;" />
+              <img id="previewImage" src="{{ url_for('static', filename='uploads/' + uploaded_image) }}" style="width:100%; height:100%; object-fit:cover;" />
             {% else %}
-              <img id="previewImage" src="#" alt="Your skin image will appear here" style="width:300px; height:300px; object-fit:cover; border-radius:15px;" />
+              <div id="imagePlaceholder" style="text-align: center; color: #888;">
+                <p>📷 Image Preview</p>
+                <img id="previewImage" src="#" style="width:100%; height:100%; object-fit:cover; display:none;" />
+              </div>
             {% endif %}
           </div>
-          <br>
           <div id="suggestion-box">
-            <h3 style="margin-top: 0; color: #e0b0ff;">💡 Smart Suggestion</h3>
-            <ul id="suggestions" style="list-style: none; padding-left: 0; margin: 10px 0;">
+            <h3 style="color: #e0b0ff; margin-top: 0;">💡 Smart Suggestion</h3>
+            <ul style="list-style: none; padding-left: 0; margin: 10px 0;">
               {% if result %}
                 {% if 'Acne' in result %}
-                  <li>✅ Try using a gentle salicylic acid cleanser.</li>
-                  <li>✅ Avoid touching or picking at acne to prevent scarring.</li>
+                  <li style="color: #fff; margin-bottom: 8px;">✅ Try a gentle salicylic acid cleanser.</li>
                 {% elif 'Rash' in result %}
-                  <li>✅ Keep the affected area clean and dry.</li>
-                  <li>✅ Apply a mild soothing cream if recommended by a doctor.</li>
+                  <li style="color: #fff; margin-bottom: 8px;">✅ Keep the area clean and dry.</li>
                 {% elif 'Allergy' in result %}
-                  <li>✅ Identify and avoid the allergen.</li>
-                  <li>✅ Consult a doctor for antihistamines if symptoms persist.</li>
+                  <li style="color: #fff; margin-bottom: 8px;">✅ Avoid triggers and use soothing lotion.</li>
                 {% endif %}
               {% else %}
-                <li>Waiting for analysis...</li>
+                <li style="color: #888; font-style: italic;">Waiting for analysis results...</li>
               {% endif %}
             </ul>
           </div>
         </section>
     </div>
 
-    <div id="chat-box" style="background: #1a1a2e; color: #fff; padding: 20px; border-radius: 15px; width: 100%; max-width: 650px; box-shadow: 0 0 12px rgba(188, 89, 255, 0.3); border: 1px solid #bc59ff;">
-      <h3 style="color: #bb86fc; margin: 0;">Ask DermaGPT Assistant:</h3>
-      <textarea id="userInput" placeholder="Ask me anything about skin care..." rows="3" style="width: 100%; padding: 12px; margin-top: 10px; border-radius: 10px; border: none; background: #2a2a40; color: white;"></textarea>
-      <button id="sendBtn" style="background: #bc59ff; color: white; width: 100%; padding: 10px; border-radius: 10px; border: none; margin-top: 10px; cursor: pointer; font-weight: 600;">Ask</button>
-      <div id="chatResponse" style="margin-top:15px; min-height: 20px;">I’m ready to help!</div>
-    </div>
+    <div id="ai-assistant-container">
+        <div id="chat-window">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ url_for('static', filename='ai_logo.png') }}" 
+                        style="width: 28px; height: 28px; object-fit: contain; background: white; border-radius: 4px; padding: 2px;">
+                    <span style="font-weight: 600; font-size: 0.95rem;">DermaGPT Assistant</span>
+                </div>
+                <button id="close-chat" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height: 1;">&times;</button>
+            </div>
 
+            <div id="chatDisplay" class="chat-body">
+                <div class="ai-msg">
+                    Hello! I'm <b>DermaGPT</b>. Scan your skin or ask me anything about skincare!
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+                    <button class="chat-chip" onclick="quickAsk('Routine for oily skin')">Oily Skin Tips</button>
+                    <button class="chat-chip" onclick="quickAsk('How to treat Acne?')">Acne Treatment</button>
+                    <button class="chat-chip" onclick="quickAsk('Sunscreen guide')">Sunscreen info</button>
+                </div>
+            </div>
+
+            <div style="padding: 15px; background: #1a1a2e; border-top: 1px solid #333;">
+                <div style="display: flex; background: #2a2a40; border-radius: 25px; padding: 5px 15px; align-items: center;">
+                    <textarea id="userInput" placeholder="Ask me anything..." rows="1" style="flex: 1; background: transparent; border: none; color: white; outline: none; padding: 8px; resize: none; font-size: 0.9rem;"></textarea>
+                    <button id="sendBtn" style="background: #bc59ff; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 5px;">
+                        <span style="transform: rotate(-45deg); margin-bottom: 2px; margin-left: 2px;">➤</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button id="chat-toggle-btn">
+            <img src="{{ url_for('static', filename='ai_logo.png') }}" style="width: 50px; height: auto; object-fit: contain;">
+        </button>
+    </div>
   </main>
 
   <footer>
@@ -104,75 +303,109 @@
   </footer>
 
   <script>
-    // 1. Typewriter Effect Logic for Splash Screen
-    const text = "DermaScan";
-    let index = 0;
-    function typeWriter() {
-      const typewriterElement = document.getElementById("typewriter");
-      if (typewriterElement && index < text.length) {
-        typewriterElement.innerHTML += text.charAt(index);
-        index++;
-        setTimeout(typeWriter, 150);
+    // 1. Splash Screen
+    const mainTitle = "DermaScan";
+    let charIdx = 0;
+    function runTypewriter() {
+      const el = document.getElementById("typewriter");
+      if (el && charIdx < mainTitle.length) {
+        el.innerHTML += mainTitle.charAt(charIdx);
+        charIdx++;
+        setTimeout(runTypewriter, 150);
       }
     }
 
-    // 2. Control Splash Screen timing
     window.onload = function() {
-      typeWriter(); // Start typewriter immediately
-      
+      runTypewriter();
       setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         if (splash) {
           splash.style.opacity = '0';
-          setTimeout(() => {
-            splash.style.display = 'none';
-          }, 1000); // Wait for fade-out
+          setTimeout(() => { splash.style.display = 'none'; }, 1000);
         }
-      }, 3000); // Keep visible for 3 seconds
+      }, 3000);
     };
 
-    // 3. Image Selection Preview
+    // 2. Image Preview
     const imageInput = document.getElementById('imageInput');
-    const previewImage = document.getElementById('previewImage');
-    if (imageInput && previewImage) {
+    const previewImg = document.getElementById('previewImage');
+    const imagePlaceholder = document.getElementById('imagePlaceholder');
+    if (imageInput && previewImg) {
       imageInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
+          previewImg.style.display = 'block';
+          if(imagePlaceholder) imagePlaceholder.style.display = 'none';
           const reader = new FileReader();
-          reader.onload = function(e) { previewImage.src = e.target.result; }
+          reader.onload = function(e) { previewImg.src = e.target.result; }
           reader.readAsDataURL(file);
         }
       });
     }
 
-    // 4. Simplified Chat Interaction (Keyword Matching)
-const sendBtn = document.getElementById("sendBtn");
-const userInput = document.getElementById("userInput");
-const responseBox = document.getElementById("chatResponse");
+    // 3. Floating Assistant Logic
+    const chatToggle = document.getElementById('chat-toggle-btn');
+    const chatWindow = document.getElementById('chat-window');
+    const closeChat = document.getElementById('close-chat');
+    const userInput = document.getElementById('userInput');
+    const chatDisplay = document.getElementById("chatDisplay");
 
-if (sendBtn && userInput && responseBox) {
-  sendBtn.addEventListener("click", () => {
-    const message = userInput.value.trim().toLowerCase();
-    if (!message) return;
+    chatToggle.onclick = () => {
+      if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
+        chatWindow.style.display = 'flex';
+        chatWindow.classList.add('animate-slide-up');
+      } else {
+        chatWindow.style.display = 'none';
+      }
+    };
 
-    // Direct keyword responses
-    if (message.includes("acne")) {
-      responseBox.innerHTML = "<strong>🧠 DermaGPT:</strong> For acne, try using a gentle salicylic acid cleanser and avoid touching your face.";
-    } 
-    else if (message.includes("rash")) {
-      responseBox.innerHTML = "<strong>🧠 DermaGPT:</strong> Keep the rash clean and dry. Avoid harsh soaps and use a mild soothing lotion.";
-    } 
-    else if (message.includes("allergy") || message.includes("allergic")) {
-      responseBox.innerHTML = "<strong>🧠 DermaGPT:</strong> Identify the trigger and avoid it. A cold compress can help soothe the irritation.";
-    } 
-    else {
-      responseBox.innerHTML = "<strong>🧠 DermaGPT:</strong> I'm here to help with questions about Acne, Rashes, and Allergies. Could you tell me more?";
+    closeChat.onclick = () => { chatWindow.style.display = 'none'; };
+
+    function quickAsk(text) {
+      userInput.value = text;
+      handleGeminiChat();
     }
 
-    userInput.value = ""; // Clear input after clicking
-  });
-}
+    async function handleGeminiChat() {
+      const msg = userInput.value.trim();
+      if (!msg) return;
 
+      chatDisplay.innerHTML += `<div class="user-msg">${msg}</div>`;
+      userInput.value = ""; 
+      
+      const loading = document.createElement("div");
+      loading.className = "typing-indicator";
+      loading.innerHTML = "DermaGPT is thinking...";
+      chatDisplay.appendChild(loading);
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
+
+      try {
+        const response = await fetch('/ask_dermagpt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await response.json();
+        loading.remove();
+        
+        const aiDiv = document.createElement("div");
+        aiDiv.className = "ai-msg";
+        aiDiv.innerHTML = marked.parse(data.reply);
+        chatDisplay.appendChild(aiDiv);
+
+      } catch (err) {
+        loading.innerHTML = "Error connecting to server.";
+      }
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    document.getElementById("sendBtn").onclick = handleGeminiChat;
+    userInput.onkeypress = (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleGeminiChat();
+      }
+    };
   </script>
 </body>
 </html>

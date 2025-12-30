@@ -1,5 +1,7 @@
 flask
-tensorflow
+tensorflow-cpu
 numpy
 requests
 gunicorn
+google-generativeai
+Pillow

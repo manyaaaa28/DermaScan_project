@@ -28,19 +28,19 @@ function showPage(pageId) {
     }
   }
 
-  window.onload = function() {
-    typeWriter();
-
+window.onload = function() {
+    runTypewriter();
+    
     setTimeout(() => {
-      const splash = document.getElementById('splash-screen');
-      splash.style.opacity = '0';
-      setTimeout(() => {
-        splash.style.display = 'none';
-      }, 1000);
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => { 
+                splash.style.display = 'none'; 
+            }, 1000);
+        }
     }, 3000);
-  };
-
-
+};
 
 
 
